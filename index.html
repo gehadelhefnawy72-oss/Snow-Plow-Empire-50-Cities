@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#071a2d">
-<title>Snow Plow Empire: 40 Cities</title>
+<title>Snow Plow Empire: 50 Cities</title>
 <style>
 :root{--ice:#9cecff;--gold:#ffd76a;--panel:rgba(5,19,35,.88);--line:rgba(180,231,255,.22)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061526;font-family:system-ui,Arial,sans-serif;color:#effaff;touch-action:none}
@@ -12,6 +12,8 @@
 #stage{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);aspect-ratio:16/9;overflow:hidden;background:#142f46;box-shadow:0 0 55px #0009}
 canvas{width:100%;height:100%;display:block}
 .hud{position:absolute;inset:0;pointer-events:none}
+#start{pointer-events:auto;z-index:20}
+#play{pointer-events:auto;touch-action:manipulation;cursor:pointer}
 .top{position:absolute;left:2%;right:2%;top:2%;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .brand,.stat,.panel,.citytag{background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);box-shadow:0 8px 24px #0004}
 .brand{padding:8px 12px;border-radius:13px;font-weight:900;letter-spacing:.06em;font-size:clamp(10px,1.3vw,16px)}
@@ -48,7 +50,7 @@ canvas{width:100%;height:100%;display:block}
 <body><div id="game"><div id="stage">
 <canvas id="c" width="1280" height="720"></canvas>
 <div class="hud">
- <div class="top"><div class="brand">❄ SNOW PLOW EMPIRE <small>40 CITIES • WINTER WORKS</small></div><div class="stats">
+ <div class="top"><div class="brand">❄ SNOW PLOW EMPIRE <small>50 CITIES • WINTER WORKS</small></div><div class="stats">
  <div class="stat">CASH<b id="cash">$0</b></div><div class="stat">CITY<b id="city">01 / 40</b></div><div class="stat">RESCUES<b id="rescues">0</b></div><button class="btn desktop" id="upgradeTop">UPGRADES</button><button class="btn desktop" id="pauseTop">Ⅱ</button><button class="btn desktop" id="lang">عربي</button></div></div>
  <div class="citytag" id="cityname">NEW YORK • USA</div><div id="hint">WASD / ARROWS to drive • SPACE for NITRO • Clear snow and rescue cars</div>
  <div class="bottom"><div class="tankbox">SNOW TANK <b id="tanktxt">0 / 100</b><div class="bar"><i id="tankbar"></i></div><div style="margin-top:5px;color:#a9c8d8">MELTER <span id="melter">Move near the blue station</span></div></div>
@@ -86,7 +88,9 @@ function start(){if(started)return;started=true;$('start').style.display='none';
 function stopGameplay(){if(started&&!paused){paused=true;sdkCall('gameplayStop')}}
 function resume(){if(!started){start();return}if(paused){paused=false;try{if(PokiSDK&&PokiSDK.commercialBreak)PokiSDK.commercialBreak().catch(()=>{})}catch(e){}sdkCall('gameplayStart');last=performance.now()}}
 function pause(){if(!started)return;stopGameplay();$('panel').style.display='none';$('start').style.display='flex';$('start').querySelector('h1').textContent='PAUSED';$('start').querySelector('p').textContent='Your snow empire is waiting.';$('play').textContent='RESUME'}
-$('play').onclick=()=>{if(paused){$('start').style.display='none';resume()}else start()};
+const activateStart=()=>{if(paused){$('start').style.display='none';resume()}else start()};
+$('play').addEventListener('click',activateStart);
+$('play').addEventListener('pointerup',e=>{e.preventDefault();activateStart()});
 $('pauseBtn').onclick=$('pauseTop').onclick=pause;
 $('upgradeBtn').onclick=$('upgradeTop').onclick=()=>{if(!started)return;stopGameplay();$('start').style.display='none';$('panel').style.display='block';buildUpgrades()};
 $('close').onclick=()=>{$('panel').style.display='none';resume()};
