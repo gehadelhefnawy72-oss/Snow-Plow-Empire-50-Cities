@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#071a2d">
+<title>Snow Plow Empire: 40 Cities</title>
+<style>
+:root{--ice:#9cecff;--gold:#ffd76a;--panel:rgba(5,19,35,.88);--line:rgba(180,231,255,.22)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061526;font-family:system-ui,Arial,sans-serif;color:#effaff;touch-action:none}
+#game{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#183d5b,#061526 75%)}
+#stage{position:relative;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);aspect-ratio:16/9;overflow:hidden;background:#142f46;box-shadow:0 0 55px #0009}
+canvas{width:100%;height:100%;display:block}
+.hud{position:absolute;inset:0;pointer-events:none}
+.top{position:absolute;left:2%;right:2%;top:2%;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.brand,.stat,.panel,.citytag{background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);box-shadow:0 8px 24px #0004}
+.brand{padding:8px 12px;border-radius:13px;font-weight:900;letter-spacing:.06em;font-size:clamp(10px,1.3vw,16px)}
+.brand small{display:block;color:#8edcf5;font-size:.68em;letter-spacing:.15em}
+.stats{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.stat{border-radius:12px;padding:7px 10px;min-width:75px;font-size:clamp(9px,1.1vw,13px);text-align:center}
+.stat b{display:block;color:var(--gold);font-size:1.25em}
+.citytag{position:absolute;top:13%;left:50%;transform:translateX(-50%);padding:6px 14px;border-radius:30px;font-size:clamp(10px,1.2vw,14px);white-space:nowrap;color:#c8f4ff}
+.bottom{position:absolute;left:2%;right:2%;bottom:2%;display:flex;align-items:end;justify-content:space-between;gap:10px}
+.tankbox{width:min(30%,260px);background:var(--panel);border:1px solid var(--line);padding:8px 10px;border-radius:12px;font-size:clamp(9px,1.1vw,13px)}
+.bar{height:9px;background:#18354a;border-radius:8px;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#54c9ef,#e1fbff);border-radius:8px;transition:width .15s}
+.actions{display:flex;gap:8px;pointer-events:auto}.btn{border:1px solid #b9eaff55;background:linear-gradient(180deg,#28617e,#12334c);color:white;font-weight:800;border-radius:13px;padding:10px 13px;min-width:62px;box-shadow:0 5px 0 #061a2b;font-size:clamp(10px,1.1vw,14px)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #061a2b}.btn.gold{background:linear-gradient(180deg,#e4ad42,#8e5719);color:#1b1a13}.btn.blue{background:linear-gradient(180deg,#36b9ef,#12608e)}
+#joystick{position:absolute;left:3%;bottom:12%;width:clamp(88px,13vw,140px);height:clamp(88px,13vw,140px);border-radius:50%;background:#b8eaff20;border:2px solid #c9f3ff65;pointer-events:auto;display:none}
+#stick{position:absolute;width:42%;height:42%;left:29%;top:29%;border-radius:50%;background:linear-gradient(#dff9ff,#4a9dbb);box-shadow:0 4px 14px #0008}
+#nitro{position:absolute;right:4%;bottom:14%;width:clamp(76px,10vw,112px);height:clamp(76px,10vw,112px);border-radius:50%;display:none;font-size:clamp(11px,1.5vw,17px)}
+#toast{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);font-size:clamp(18px,3vw,34px);font-weight:1000;color:#fff5c4;text-shadow:0 3px 12px #000;opacity:0;transition:opacity .2s;white-space:nowrap;text-align:center}
+#panel{position:absolute;inset:12% 18%;background:rgba(4,17,31,.96);border:1px solid #9cecff66;border-radius:18px;padding:18px;display:none;pointer-events:auto;overflow:auto}
+#panel h2{margin:0 0 12px;color:#bdefff}
+.upgrades{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.up{border:1px solid var(--line);background:#102c43;border-radius:12px;padding:10px;text-align:left;color:white}
+.up b{display:block;color:#ffe09a}.up small{display:block;color:#a9c8d8;margin:4px 0}.up span{color:#72e0ff;font-weight:900}
+#close{float:right}
+#start{position:absolute;inset:0;background:linear-gradient(120deg,#07192bdc,#092d48bb);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
+.startcard{max-width:520px;background:#06192bea;border:1px solid #a8eaff66;border-radius:22px;padding:clamp(18px,3vw,34px);box-shadow:0 20px 60px #0008}
+.startcard h1{font-size:clamp(24px,4vw,44px);line-height:1;margin:0 0 8px;color:#e7faff}.startcard p{color:#b6d5e5;margin:8px 0 18px}
+#play{font-size:18px;padding:13px 30px}
+#hint{position:absolute;top:22%;left:50%;transform:translateX(-50%);font-size:clamp(10px,1.1vw,13px);color:#d8f6ff;text-shadow:0 2px 5px #000;white-space:nowrap;text-align:center}
+@media(pointer:coarse){#joystick,#nitro{display:block}.actions .desktop{display:none}}
+@media(max-aspect-ratio:1/1){#stage{width:100vw;height:100vh;aspect-ratio:auto}#panel{inset:9% 4%}.upgrades{grid-template-columns:1fr 1fr}.top{top:1%}.brand{max-width:42%}.stats{max-width:58%}.stat{min-width:58px;padding:5px}.citytag{top:12%}.bottom{bottom:2%}.tankbox{width:36%}}
+</style>
+<script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
+</head>
+<body><div id="game"><div id="stage">
+<canvas id="c" width="1280" height="720"></canvas>
+<div class="hud">
+ <div class="top"><div class="brand">❄ SNOW PLOW EMPIRE <small>40 CITIES • WINTER WORKS</small></div><div class="stats">
+ <div class="stat">CASH<b id="cash">$0</b></div><div class="stat">CITY<b id="city">01 / 40</b></div><div class="stat">RESCUES<b id="rescues">0</b></div><button class="btn desktop" id="upgradeTop">UPGRADES</button><button class="btn desktop" id="pauseTop">Ⅱ</button><button class="btn desktop" id="lang">عربي</button></div></div>
+ <div class="citytag" id="cityname">NEW YORK • USA</div><div id="hint">WASD / ARROWS to drive • SPACE for NITRO • Clear snow and rescue cars</div>
+ <div class="bottom"><div class="tankbox">SNOW TANK <b id="tanktxt">0 / 100</b><div class="bar"><i id="tankbar"></i></div><div style="margin-top:5px;color:#a9c8d8">MELTER <span id="melter">Move near the blue station</span></div></div>
+ <div class="actions"><button class="btn" id="upgradeBtn">⚙ UPGRADES</button><button class="btn blue" id="nitroBtn">⚡ NITRO</button><button class="btn" id="pauseBtn">Ⅱ</button></div></div>
+ <div id="joystick"><div id="stick"></div></div><button class="btn gold" id="nitro">⚡<br>NITRO</button><div id="toast"></div>
+ <div id="panel"><button class="btn" id="close">CLOSE ✕</button><h2>TRUCK WORKSHOP</h2><p style="color:#a9c8d8;margin-top:-5px">Invest your earnings and build the ultimate snow fleet.</p><div class="upgrades" id="upgradeList"></div></div>
+ <div id="start"><div class="startcard"><div style="font-size:42px">🚜❄️</div><h1>SNOW PLOW EMPIRE</h1><p>40 cities. Endless winter. One legendary snow fleet.<br>Clear the road, rescue stranded drivers and grow your empire.</p><button class="btn gold" id="play">START PLOWING</button><div style="font-size:11px;color:#7fa6ba;margin-top:12px">A quick-start build • Progress saves automatically</div></div></div>
+</div></div></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),cv=$('c'),ctx=cv.getContext('2d');
+const cities=[["New York","USA","Skyline / Times Square"],["Boston","USA","Brick Harbor"],["Chicago","USA","Lakefront Towers"],["Detroit","USA","Motor City"],["Minneapolis","USA","Frozen Lakes"],["Denver","USA","Rocky Mountain Gate"],["Anchorage","Alaska","Aurora Frontier"],["Toronto","Canada","CN Tower District"],["Montreal","Canada","Old Port"],["Ottawa","Canada","Parliament Hill"],["Vancouver","Canada","Coastal Peaks"],["Calgary","Canada","Prairie Skyscrapers"],["Quebec City","Canada","Old Walled Town"],["Nuuk","Greenland","Arctic Color Houses"],["Reykjavik","Iceland","Volcanic Harbor"],["Oslo","Norway","Fjord Capital"],["Bergen","Norway","Bryggen Wharf"],["Stockholm","Sweden","Island Bridges"],["Kiruna","Sweden","Ice Hotel"],["Helsinki","Finland","Harbor Design Quarter"],["Rovaniemi","Finland","Santa Village"],["Tallinn","Estonia","Medieval Spires"],["Riga","Latvia","Art Nouveau Streets"],["Warsaw","Poland","Royal Route"],["Prague","Czechia","Charles Bridge"],["Berlin","Germany","Modern Gate"],["Munich","Germany","Alpine Old Town"],["Zurich","Switzerland","Lakeside Banks"],["Zermatt","Switzerland","Matterhorn Village"],["Innsbruck","Austria","Tyrolean Alps"],["Chamonix","France","Mont Blanc Base"],["Milan","Italy","Galleria District"],["Moscow","Russia","Red Square"],["Saint Petersburg","Russia","Winter Palace Canals"],["Novosibirsk","Russia","Siberian Rail Hub"],["Yakutsk","Russia","Permafrost City"],["Astana","Kazakhstan","Futuristic Boulevard"],["Ulaanbaatar","Mongolia","Steppe Capital"],["Harbin","China","Ice Festival Avenue"],["Sapporo","Japan","Snow Festival Park"],["Seoul","South Korea","Neon Winter District"],["Beijing","China","Imperial North Gate"],["Lhasa","Tibet","High Plateau"],["Dalian","China","Frozen Bay"],["Tromsø","Norway","Northern Lights Port"],["Fairbanks","Alaska","Aurora Research Town"],["Edinburgh","Scotland","Castle Ridge"],["Kraków","Poland","Market Square"],["Geneva","Switzerland","Alpine Lakefront"],["Arctic Empire HQ","Arctic","The Grand Ice Citadel"]];
+const defs=[['Blade Width','Wider blade clears more snow.',120,1],['Snow Tank','Carry more snow before unloading.',150,1],['Engine Power','Increase top speed and acceleration.',180,1],['Heated Blade','Melt hard ice and clear faster.',250,0],['Melter Speed','Earn more from every load.',220,1],['Coin Magnet','Collect nearby treasure automatically.',300,0],['AI Helper Plow','A helper truck earns passive cash.',450,0],['Snow Value','Increase snow sale value.',280,1],['Storm Freeze','Slow fresh snowfall for a short time.',380,0],['Golden Ice','Find more valuable buried treasure.',500,0]];
+let save={cash:0,city:0,rescues:0,up:Array(10).fill(0),tank:0,lang:'en'};
+try{let s=JSON.parse(localStorage.getItem('snowPlowEmpire50')||localStorage.getItem('snowPlowEmpire40'));if(s&&typeof s==='object')save={...save,...s,city:Math.max(0,Math.min(49,s.city||0)),up:Array.isArray(s.up)?s.up:Array(10).fill(0)}}catch(e){}
+let started=false,paused=false,gameOver=false,last=0,acc=0,shake=0,toastTimer=0,storm=0,boost=0,combo=0,comboTime=0;
+let player={x:0,y:0,a:-Math.PI/2,v:0};let cam={x:0,y:0};let snow=[],cars=[],trees=[],flakes=[],coins=[],ice=[],particles=[];
+const W=1800,H=1300,cell=46,cols=Math.ceil(W/cell),rows=Math.ceil(H/cell),grid=new Float32Array(cols*rows);
+function idx(x,y){return Math.max(0,Math.min(rows-1,Math.floor(y/cell)))*cols+Math.max(0,Math.min(cols-1,Math.floor(x/cell)))}
+for(let i=0;i<grid.length;i++)grid[i]=.7+Math.random()*.3;
+function road(x,y){return Math.abs(x-W/2)<210||Math.abs(y-H/2)<170}
+function initWorld(){for(let i=0;i<grid.length;i++)grid[i]=.7+Math.random()*.3;snow=[];cars=[];trees=[];flakes=[];coins=[];ice=[];particles=[];for(let y=90;y<H-80;y+=135)for(let x=90;x<W-80;x+=150){if(!road(x,y)){trees.push({x,y,r:18+Math.random()*10});if(Math.random()<.18)ice.push({x:x+35,y:y+35,r:18,done:false})}}
+for(let i=0;i<12;i++){let horizontal=i%2===0;let x=horizontal?220+i*115:W/2+(Math.random()-.5)*230;let y=horizontal?H/2+(Math.random()-.5)*220:170+i*88;cars.push({x,y,a:horizontal?0:Math.PI/2,freed:false,type:i%4,need:0.22})}
+player={x:W/2-70,y:H/2+255,a:-Math.PI/2,v:0};cam={x:player.x,y:player.y};}
+initWorld();
+function saveNow(){try{localStorage.setItem('snowPlowEmpire50',JSON.stringify(save))}catch(e){}}
+function money(n){return '$'+Math.floor(n).toLocaleString('en-US')}
+function toast(t){$('toast').textContent=t;$('toast').style.opacity=1;toastTimer=2}
+function addCash(n){save.cash+=n;saveNow();updateUI()}
+function updateUI(){$('cash').textContent=money(save.cash);$('city').textContent=String(save.city+1).padStart(2,'0')+' / 50';$('rescues').textContent=save.rescues;$('tanktxt').textContent=Math.floor(save.tank)+' / '+(100+save.up[1]*55);$('tankbar').style.width=(save.tank/(100+save.up[1]*55)*100)+'%';$('cityname').textContent=(save.city+1).toString().padStart(2,'0')+'/50  •  '+cities[save.city][0].toUpperCase()+' • '+cities[save.city][1].toUpperCase()}
+function sound(f=220,d=.08,type='sine',vol=.035){try{let A=window.AudioContext||window.webkitAudioContext;if(!A)return;let a=sound.ac||(sound.ac=new A()),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+d)}catch(e){}}
+function sdkCall(name){try{if(window.PokiSDK&&typeof PokiSDK[name]==='function')return PokiSDK[name]()}catch(e){}}
+let sdkReady=false;try{if(window.PokiSDK&&PokiSDK.init)PokiSDK.init().then(()=>sdkReady=true).catch(()=>{});}catch(e){}
+function start(){if(started)return;started=true;$('start').style.display='none';sdkCall('gameLoadingFinished');sdkCall('gameplayStart');sound(420,.12);updateUI();last=performance.now();requestAnimationFrame(loop)}
+function stopGameplay(){if(started&&!paused){paused=true;sdkCall('gameplayStop')}}
+function resume(){if(!started){start();return}if(paused){paused=false;try{if(PokiSDK&&PokiSDK.commercialBreak)PokiSDK.commercialBreak().catch(()=>{})}catch(e){}sdkCall('gameplayStart');last=performance.now()}}
+function pause(){if(!started)return;stopGameplay();$('panel').style.display='none';$('start').style.display='flex';$('start').querySelector('h1').textContent='PAUSED';$('start').querySelector('p').textContent='Your snow empire is waiting.';$('play').textContent='RESUME'}
+$('play').onclick=()=>{if(paused){$('start').style.display='none';resume()}else start()};
+$('pauseBtn').onclick=$('pauseTop').onclick=pause;
+$('upgradeBtn').onclick=$('upgradeTop').onclick=()=>{if(!started)return;stopGameplay();$('start').style.display='none';$('panel').style.display='block';buildUpgrades()};
+$('close').onclick=()=>{$('panel').style.display='none';resume()};
+function buildUpgrades(){let box=$('upgradeList');box.innerHTML='';defs.forEach((d,i)=>{let lv=save.up[i]||0,cost=Math.floor(d[2]*Math.pow(1.62,lv));let b=document.createElement('button');b.className='up';b.innerHTML='<b>'+d[0]+' • LV '+lv+'</b><small>'+d[1]+'</small><span>BUY '+money(cost)+'</span>';b.onclick=()=>{if(save.cash<cost){toast('NOT ENOUGH CASH');sound(110,.12,'square');return}save.cash-=cost;save.up[i]=lv+1;saveNow();buildUpgrades();updateUI();toast(d[0].toUpperCase()+' UPGRADED!');sound(650,.15)};box.appendChild(b)})}
+$('lang').onclick=()=>{save.lang=save.lang==='en'?'ar':'en';$('lang').textContent=save.lang==='ar'?'English':'عربي';$('hint').textContent=save.lang==='ar'?'استخدم WASD أو الأسهم للقيادة • مسافة للنيترو • نظّف الثلج وأنقذ السيارات':'WASD / ARROWS to drive • SPACE for NITRO • Clear snow and rescue cars';saveNow()};
+function nearMelter(){return Math.hypot(player.x-W/2,player.y-(H/2+255))<130}
+function move(dt){let dx=0,dy=0;if(keys.ArrowUp||keys.KeyW)dy--;if(keys.ArrowDown||keys.KeyS)dy++;if(keys.ArrowLeft||keys.KeyA)dx--;if(keys.ArrowRight||keys.KeyD)dx++;if(touch.active){dx=touch.x;dy=touch.y}
+let m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m}let nitro=keys.Space||touch.nitro;boost=Math.max(0,boost-dt);let speed=190+save.up[2]*22+(nitro?170:0)+(boost?100:0);if(m>.05){let target=Math.atan2(dy,dx);let diff=Math.atan2(Math.sin(target-player.a),Math.cos(target-player.a));player.a+=diff*Math.min(1,dt*7);player.v+=(speed-player.v)*Math.min(1,dt*3)}else player.v*=Math.pow(.04,dt);
+player.x+=Math.cos(player.a)*player.v*dt;player.y+=Math.sin(player.a)*player.v*dt;player.x=Math.max(65,Math.min(W-65,player.x));player.y=Math.max(65,Math.min(H-65,player.y));
+let blade=58+save.up[0]*12;let bx=player.x+Math.cos(player.a)*54,by=player.y+Math.sin(player.a)*54;let clear=0;
+for(let yy=-2;yy<=2;yy++)for(let xx=-3;xx<=3;xx++){let wx=bx+xx*20,wy=by+yy*20;if(wx<0||wy<0||wx>=W||wy>=H||road(wx,wy)===false)continue;let id=idx(wx,wy);if(grid[id]>.04){let take=Math.min(grid[id],.18+save.up[3]*.05);grid[id]-=take;clear+=take;}}
+if(clear>0&&Math.random()<.8){for(let k=0;k<2;k++)particles.push({x:bx+(Math.random()-.5)*blade,y:by+(Math.random()-.5)*55,vx:(Math.random()-.5)*100,vy:(Math.random()-.5)*100,life:.45+Math.random()*.4})}
+save.tank=Math.min(100+save.up[1]*55,save.tank+clear*7.2);
+if(clear>.02){shake=Math.min(5,shake+clear*1.3);if(Math.random()<.1)sound(85+Math.random()*40,.04,'sawtooth',.012)}
+for(let c of cars){if(!c.freed){let around=0;for(let a=0;a<8;a++){let xx=c.x+Math.cos(a*Math.PI/4)*40,yy=c.y+Math.sin(a*Math.PI/4)*40;if(grid[idx(xx,yy)]<.12)around++}if(around>=5){c.freed=true;save.rescues++;combo++;comboTime=4;let reward=220+save.city*35+combo*45;addCash(reward);toast('RESCUE COMBO x'+combo+'  +'+money(reward));sound(720,.18,'triangle');for(let k=0;k<14;k++)coins.push({x:c.x,y:c.y,vx:(Math.random()-.5)*150,vy:-80-Math.random()*100,life:1.2,value:12})}}}
+for(let it of ice)if(!it.done&&Math.hypot(it.x-bx,it.y-by)<blade*.75&&player.v>60){it.done=true;let reward=save.up[9]?600:300;addCash(reward);toast('GOLDEN ICE  +'+money(reward));sound(950,.22,'triangle');for(let k=0;k<18;k++)particles.push({x:it.x,y:it.y,vx:(Math.random()-.5)*180,vy:(Math.random()-.5)*180,life:1,color:'#7ee9ff'})}
+if(nearMelter()&&save.tank>0){let amount=Math.min(save.tank,dt*(18+save.up[4]*9));save.tank-=amount;let earn=amount*(5+save.up[7]*1.25)*(1+save.city*.08);addCash(earn);if(Math.random()<.12)sound(530,.06,'triangle',.02);$('melter').textContent='PROCESSING • '+Math.floor(save.tank)+'%';if(save.tank<.2){toast('MELTER BONUS!');sound(840,.2)}}else $('melter').textContent='Move near the blue station';
+if(save.cash>=(800+save.city*650)&&save.city<49){save.city++;save.cash-=Math.floor(300+save.city*100);saveNow();initWorld();toast('CITY UNLOCKED: '+cities[save.city][0].toUpperCase());sound(600,.3);updateUI()}
+if(comboTime>0)comboTime-=dt;else combo=0;
+if(storm>0)storm-=dt;else if(Math.random()<dt/120){storm=12;toast('BLIZZARD INCOMING!')}
+}
+const keys={};window.addEventListener('keydown',e=>{keys[e.code]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='Escape')pause()});window.addEventListener('keyup',e=>keys[e.code]=false);
+let touch={active:false,x:0,y:0,nitro:false};let joy=$('joystick'),stick=$('stick');
+function joyMove(e){let r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=(e.clientX-cx)/(r.width*.34),dy=(e.clientY-cy)/(r.height*.34),m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m}touch.x=dx;touch.y=dy;stick.style.transform=`translate(${dx*35}px,${dy*35}px)`}
+joy.addEventListener('pointerdown',e=>{touch.active=true;joy.setPointerCapture(e.pointerId);joyMove(e)});joy.addEventListener('pointermove',e=>{if(touch.active)joyMove(e)});joy.addEventListener('pointerup',()=>{touch.active=false;touch.x=touch.y=0;stick.style.transform=''});
+$('nitro').addEventListener('pointerdown',()=>touch.nitro=true);$('nitro').addEventListener('pointerup',()=>touch.nitro=false);$('nitroBtn').onpointerdown=()=>touch.nitro=true;$('nitroBtn').onpointerup=()=>touch.nitro=false;
+function draw(){let w=cv.width,h=cv.height;ctx.clearRect(0,0,w,h);let scale=Math.min(w/1280,h/720),ox=(w-1280*scale)/2,oy=(h-720*scale)/2;ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);
+let sx=player.x-640,sy=player.y-360;cam.x+=(sx-cam.x)*.08;cam.y+=(sy-cam.y)*.08;ctx.translate(-cam.x,-cam.y);
+const theme=[["#142b43","#34495d","#f4c15d"],["#1b3549","#49596a","#e8a76d"],["#15283d","#40546a","#7fd6e8"],["#202b3c","#4b5360","#f0a34a"],["#183448","#3d5967","#a7e8f2"],["#26384b","#526275","#f4bd65"],["#142d46","#3b536b","#80e8ff"],["#19384a","#465e6d","#d5eaff"],["#26374a","#526073","#e6b8ff"],["#1a3044","#405568","#d7e8ff"],["#143448","#3b5b6a","#83e0ce"],["#26394b","#4d5f70","#ffd17b"],["#25374a","#4d5c6c","#e6d4b5"],["#163448","#3d5868","#80e8ff"],["#25374b","#4a5969","#ff9b68"],["#173448","#3b5966","#9de5ef"],["#263b4d","#526575","#efb36c"],["#17394b","#3e6070","#9eeaff"],["#263448","#4a5d70","#d6e8ff"],["#173448","#3e5c6b","#9ad8ed"],["#26394a","#506477","#d2eaff"],["#273649","#536174","#e8bd82"],["#20364a","#4c5f70","#e6b7a1"],["#1a3449","#405b70","#f3d28b"],["#1b2e43","#45576a","#8ed9ef"],["#27374a","#526174","#e7b87a"],["#1b344a","#405c70","#b8dfff"],["#19384c","#3c6076","#f0f7ff"],["#20374a","#4a6173","#f2c27c"],["#18364c","#3d5c70","#a6e5ff"],["#29384a","#536174","#f3bd73"],["#192d43","#40556c","#e5a6a6"],["#20354b","#4a5c73","#c8e5ff"],["#1b3548","#425b6c","#9edcf0"],["#172b40","#3b5065","#b7eaff"],["#1b344a","#415c70","#e4bd7d"],["#26364a","#4e6074","#d7a7ff"],["#16384c","#3c6075","#7de5ff"],["#19384b","#426174","#f1d27c"],["#162f48","#3d5870","#f5a6cf"],["#20384d","#4a6075","#e8d19a"],["#28394b","#526477","#d4c4ff"],["#183449","#3e5d70","#a4dfff"],["#15354b","#3c5f73","#8eeaff"],["#172f46","#3e5870","#f3d17a"],["#26374b","#526176","#e3ad88"],["#21364a","#4a6074","#bde9ff"],["#18364b","#405d73","#9be5ff"],["#1b354a","#425d72","#f5d18a"],["#101f35","#29445e","#9ff3ff"]][save.city%50];
+ctx.fillStyle=theme[0];ctx.fillRect(0,0,W,H);
+ctx.fillStyle=theme[1];ctx.fillRect(W/2-210,0,420,H);ctx.fillRect(0,H/2-170,W,340);
+ctx.strokeStyle=theme[2];ctx.lineWidth=3;ctx.setLineDash([35,28]);ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();ctx.setLineDash([]);
+for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){let val=grid[y*cols+x];if(val>.03){let px=x*cell,py=y*cell;if(!road(px+cell/2,py+cell/2))continue;ctx.fillStyle=`rgba(202,235,249,${.12+val*.55})`;ctx.fillRect(px,py,cell+1,cell+1);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(px+2,py+2,cell-5,4)}}
+// City identity: a distinct skyline/landmark silhouette and themed street furniture.
+ctx.save();ctx.globalAlpha=.88;let landmark=cities[save.city][2];ctx.fillStyle=theme[0];
+for(let k=0;k<9;k++){let bx=85+k*190,by=95+((k*73+save.city*31)%155),bw=65+(k*17%48),bh=85+(k*29%115);ctx.fillRect(bx,by,bw,bh);ctx.fillStyle=theme[2];for(let wy=0;wy<Math.floor(bh/22);wy++)for(let wx=0;wx<Math.floor(bw/18);wx++){ctx.globalAlpha=.25;ctx.fillRect(bx+8+wx*18,by+10+wy*22,7,9)}ctx.globalAlpha=.88;ctx.fillStyle=theme[0];}
+ctx.globalAlpha=1;ctx.fillStyle=theme[2];ctx.font='bold 22px system-ui';ctx.fillText(landmark,W/2-160,105);ctx.restore();
+for(let t of trees){ctx.fillStyle=theme[0];ctx.beginPath();ctx.arc(t.x+4,t.y+8,t.r+3,0,7);ctx.fill();ctx.fillStyle=theme[1];ctx.beginPath();ctx.arc(t.x,t.y,t.r,0,7);ctx.fill();ctx.fillStyle='#d8f7ff';ctx.beginPath();ctx.arc(t.x-4,t.y-5,t.r*.48,0,7);ctx.fill()}
+for(let c of cars){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.a);ctx.fillStyle=c.freed?'#3c8d9c':['#d33e4b','#e8b54b','#e5edf2','#5c78a7'][c.type];ctx.fillRect(-27,-13,54,26);ctx.fillStyle='#152a3b';ctx.fillRect(-12,-10,22,20);ctx.fillStyle='#d8f9ff';ctx.fillRect(17,-8,7,5);ctx.fillRect(17,3,7,5);if(!c.freed){ctx.fillStyle='#d9f5ff';ctx.globalAlpha=.5+Math.sin(performance.now()/150)*.4;ctx.fillRect(-6,-20,12,3)}ctx.restore()}
+for(let it of ice)if(!it.done){ctx.fillStyle='#55c9ed';ctx.beginPath();ctx.moveTo(it.x,it.y-it.r);ctx.lineTo(it.x+it.r,it.y-4);ctx.lineTo(it.x+it.r*.55,it.y+it.r);ctx.lineTo(it.x-it.r*.6,it.y+it.r*.7);ctx.closePath();ctx.fill();ctx.strokeStyle='#d7fbff';ctx.stroke()}
+ctx.fillStyle='#14759a';ctx.fillRect(W/2-70,H/2+245,140,80);ctx.fillStyle='#7de8ff';ctx.fillRect(W/2-50,H/2+258,100,9);ctx.fillStyle='#173448';ctx.fillRect(W/2-42,H/2+276,84,32);ctx.fillStyle='#b4f5ff';for(let i=0;i<5;i++){ctx.save();ctx.translate(W/2-28+i*14,H/2+292);ctx.rotate(performance.now()/500+i);ctx.fillRect(-2,-12,4,24);ctx.restore()}
+ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.a);ctx.fillStyle='#050f1b';ctx.fillRect(-38,-24,75,48);ctx.fillStyle='#f4a52d';ctx.fillRect(-32,-21,65,42);ctx.fillStyle='#18364a';ctx.fillRect(-9,-18,29,36);ctx.fillStyle='#b9f3ff';ctx.fillRect(14,-14,12,28);ctx.fillStyle='#1b2d3b';ctx.fillRect(-45,-29,17,58);ctx.fillRect(28,-29,17,58);ctx.fillStyle=save.up[3]?'#ff6040':'#b9d5e3';ctx.fillRect(37,-(35+save.up[0]*5),10,70+save.up[0]*10);ctx.fillStyle='#d6faff';ctx.fillRect(-26,-28,10,5);ctx.fillRect(-26,23,10,5);if(keys.Space||touch.nitro){ctx.fillStyle='#39cfff';ctx.beginPath();ctx.moveTo(-40,-8);ctx.lineTo(-75,0);ctx.lineTo(-40,8);ctx.fill()}ctx.restore();
+for(let p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color||'#e9faff';ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill();ctx.globalAlpha=1}
+for(let c of coins){ctx.fillStyle='#ffd66c';ctx.beginPath();ctx.arc(c.x,c.y,5,0,7);ctx.fill()}
+ctx.restore();
+ctx.restore();
+}
+function loop(t){if(!started)return;let dt=Math.min(.035,(t-last)/1000||0);last=t;if(!paused){move(dt);for(let p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);for(let c of coins){c.x+=c.vx*dt;c.y+=c.vy*dt;c.life-=dt}coins=coins.filter(c=>c.life>0);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.opacity=0}shake*=Math.pow(.02,dt);draw()}requestAnimationFrame(loop)}
+updateUI();
+window.addEventListener('blur',()=>{if(started&&!paused)pause()});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+})();
+</script></body></html>
